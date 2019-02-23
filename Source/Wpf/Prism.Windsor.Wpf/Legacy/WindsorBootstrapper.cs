@@ -155,6 +155,9 @@ namespace Prism.Windsor
             Container.Register(Component.For<ILoggerFacade>().Instance(Logger));
             Container.Register(Component.For<IModuleCatalog>().Instance(ModuleCatalog));
 
+            Container.Register(Component.For<Regions.Behaviors.DelayedRegionCreationBehavior>());
+            Container.Register(Classes.FromAssemblyContaining<IRegionBehavior>().BasedOn<IRegionBehavior>().WithServiceSelf());
+
             Container.Register(Classes.FromAssemblyContaining<IRegionAdapter>().BasedOn<IRegionAdapter>().WithServiceSelf());
 
             if (_useDefaultConfiguration)

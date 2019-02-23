@@ -6,6 +6,7 @@ using System;
 using Castle.Windsor;
 using Castle.MicroKernel;
 using Castle.MicroKernel.Registration;
+using Prism.Regions.Behaviors;
 
 namespace Prism.Windsor
 {
@@ -28,7 +29,10 @@ namespace Prism.Windsor
         {
             base.RegisterRequiredTypes(containerRegistry);
             containerRegistry.RegisterSingleton<IRegionNavigationContentLoader, RegionNavigationContentLoader>();
-            containerRegistry.RegisterSingleton<IServiceLocator, WindsorServiceLocatorAdapter>();
+            containerRegistry.RegisterInstance<IServiceLocator>(new WindsorServiceLocatorAdapter(containerRegistry.GetContainer()));
+
+            containerRegistry.RegisterSingleton<DelayedRegionCreationBehavior>();
+            containerRegistry.GetContainer().Register(Classes.FromAssemblyContaining<IRegionBehavior>().BasedOn<IRegionBehavior>().WithServiceSelf());
 
             containerRegistry.GetContainer().Register(Classes.FromAssemblyContaining<IRegionAdapter>().BasedOn<IRegionAdapter>().WithServiceSelf());
         }

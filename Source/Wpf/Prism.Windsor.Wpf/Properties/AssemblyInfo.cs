@@ -8,5 +8,5 @@ using System.Windows.Markup;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
-[assembly: XmlnsDefinition("http://prismlibrary.com/", "Prism.DryIoc")]
+[assembly: XmlnsDefinition("http://prismlibrary.com/", "Prism.Windsor")]
 

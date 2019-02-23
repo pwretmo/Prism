@@ -4,27 +4,30 @@ using Castle.Windsor;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Prism.Windsor.Ioc
 {
-    public class WindsorContainerExtension : IContainerExtension<IWindsorContainer>, IWindsorInstaller
+    public class WindsorContainerExtension : IContainerExtension<IWindsorContainer>
     {
-        private List<IRegistration> registrations = new List<IRegistration>();
+        private Installer installer = new Installer();
+        private ISet<IWindsorInstaller> installers = new HashSet<IWindsorInstaller>();
+
+        public WindsorContainerExtension(IWindsorContainer container)
+        {
+            Instance = container;
+            installers.Add(installer);
+        }
 
         public IWindsorContainer Instance { get; }
 
         public bool SupportsModules => true;
 
-        public WindsorContainerExtension(IWindsorContainer container)
-        {
-            Instance = container;
-        }
-
         private void AddRegistration(IRegistration registration)
         {
-            if (registrations != null)
+            if (installer != null)
             {
-                registrations.Add(registration);
+                installer.Registrations.Add(registration);
             }
             else
             {
@@ -32,17 +35,29 @@ namespace Prism.Windsor.Ioc
             }
         }
 
-        public void FinalizeExtension()
+        public void AddInstaller(IWindsorInstaller installer)
         {
-            Instance.Install(this);
+            if (installers == null)
+            {
+                throw new InvalidOperationException("Windsor installers can only be added before FinalizeExtension() has been executed.");
+            }
+
+            if (installer == null)
+            {
+                throw new ArgumentNullException(nameof(installer));
+            }
+
+            this.installers.Add(installer);
         }
 
-        public void Install(IWindsorContainer container, IConfigurationStore store)
+        public void FinalizeExtension()
         {
-            container.Register(registrations.ToArray());
-
-            registrations.Clear();
-            registrations = null;
+            if (installer != null)
+            {
+                Instance.Install(this.installers.ToArray());
+                installer = null;
+                installers = null;
+            }
         }
 
         public void RegisterInstance(Type type, object instance)
@@ -78,6 +93,16 @@ namespace Prism.Windsor.Ioc
         public object ResolveViewModelForView(object view, Type viewModelType)
         {
             return Instance.Resolve(viewModelType);
+        }
+
+        private class Installer : IWindsorInstaller
+        {
+            public ISet<IRegistration> Registrations { get; } = new HashSet<IRegistration>();
+
+            public void Install(IWindsorContainer container, IConfigurationStore store)
+            {
+                container.Register(Registrations.ToArray());
+            }
         }
     }
 }
